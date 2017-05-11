@@ -1,5 +1,5 @@
 
-## This is the Getting and Cleaning Data Project ##
+## Getting and Cleaning Data Project ##
 
 The goal of the project is to get, process, clean and generate tidy dataset file. 
 [The data](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip) used for this project is from a website represent data collected from the accelerometers from the Samsung Galaxy S smartphone
