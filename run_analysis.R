@@ -1,9 +1,8 @@
 
-##The purpose of this project is to demonstrate your ability to collect, 
-##work with, and clean a data set.
+##Getting and Cleaning Data project is to collect, work with, and clean a data set.
 
 
-##You should create one R script called run_analysis.R that does the following. 
+## run_analysis.R that does the following. 
 ## 1. Merges the training and the test sets to create one data set.
 ## 2. Extracts only the measurements on the mean and standard deviation for each measurement. 
 ## 3. Uses descriptive activity names to name the activities in the data set
@@ -15,8 +14,8 @@ run_analysis <- function()
   ## set working directory to store data
   
   wd <- "C:/Getting-and-Cleaning-Data/data"
-  output1 <- "C:/Getting-and-Cleaning-Data/data/output1.csv"
-  output2 <- "C:/Getting-and-Cleaning-Data/data/output2.csv"
+  output1 <- "C:/Getting-and-Cleaning-Data/data/output1.txt"
+  output2 <- "C:/Getting-and-Cleaning-Data/data/tidy.txt"
   
   ## if data directory does not exist, create it
   
@@ -33,9 +32,9 @@ run_analysis <- function()
   if(!require("downloader")) install.packages("downloader")
   library(downloader)
   
-  
-  if(!require("dplyr")) install.packages("dplyr")
-  library(dplyr)
+  ## reshape2 will load dplyr
+  if(!require("reshape2")) install.packages("reshape2")
+  library(reshape2)
   
   ## destination zip file name  
   
@@ -83,10 +82,9 @@ run_analysis <- function()
   colnames(x_test) <- feature$V2
   
   ## add set column to indicate "test" data set
-  y_test$"2" <- tolower(activityLabels[y_test$V1, 2])
+ # y_test$"2" <- tolower(activityLabels[y_test$V1, 2])
   
   x_test <- cbind("subject_id" = subject_test[[1]], 
-                  "set" = "test", 
                   "activity" = y_test[[1]], 
                   x_test)
 
@@ -113,7 +111,6 @@ run_analysis <- function()
   y_train$"2" <- tolower(activityLabels[y_train$V1, 2])
   
   x_train <- cbind("subject_id" = subject_train[[1]], 
-                   "set" = "train", 
                    "activity" = y_train[[1]], 
                     x_train)
   
@@ -121,26 +118,69 @@ run_analysis <- function()
   print(s1)
   
   
-  ## Assignment #1:	Merges the training and the test sets to create one data set c_data
+  ##  1:	Merges the training and the test sets to create one data set c_data
   
   c_data <- rbind(x_train, x_test)
   
-  print("1.	Merges the training and the test sets to create one data set.")
+  print(" #1: Merges the training and the test sets to create one data set")
+  
   s2 <- sprintf("combined data # of columns: %d # of rows: %d ", ncol(c_data), nrow(c_data) )
   print(s2)
-  
-  ## Assignment #2	Extracts only the measurements on the mean and standard deviation for each measurement. 
-  
-  col_select <- grep("mean\\(\\)|std\\(\\)", names(c))
-  
-  output_data <- c_data[, c(1:3, col_select)]
-  
-  write.csv(output_data, file = output1)
-        
-
-  return(output_data)
-  
 
   
+  ## 2	Extracts only the measurements on the mean and standard deviation for each measurement. 
+  
+  col_select <- grep("mean\\(\\)|std\\(\\)", names(c_data))
+  
+  dataset1 <- c_data[, c(1:2, col_select)]
+  
+  print("#2: Extracts only the measurements on the mean and standard deviation for each measurement")
+  
+  ## 3.	Uses descriptive activity names to name the activities in the data set
+  
+  dataset1$activity <- tolower(activityLabels[dataset1$activity, 2])
+  
+  print("#3: Uses descriptive activity names to name the activities in the data set")
+  print(head(dataset1[,1:4]))
+  
+  
+  ## 4.	Appropriately labels the data set with descriptive variable names. 
+ 
+  names(dataset1) <- gsub("^t", "time-",names(dataset1))
+  names(dataset1) <- gsub("^f", "frequencyDomainSignal-",names(dataset1))
+  
+  names(dataset1) <- gsub("Acc", "Accelerometer",names(dataset1))
+  names(dataset1) <- gsub("Gyro", "Gyroscope",names(dataset1))
+  names(dataset1) <- gsub("Mag", "Magnitude",names(dataset1))
+  names(dataset1) <- gsub("BodyBody", "Body",names(dataset1))  
+  
+  names(dataset1) <- gsub("mean\\(\\)", "mean",names(dataset1)) 
+  names(dataset1) <- gsub("std\\(\\)", "standardDeviation",names(dataset1))   
+  
+  print("#4: Appropriately labels the data set with descriptive variable names")
+  print(names(dataset1))
+  
+  write.table(dataset1, file = output1, row.name = FALSE)
+  
+  ##5: From the data set in step 4, creates a second, independent tidy data set with the average of each variable for each activity and each subject"
+
+  print(head(dataset1[, 1:4], 20))
+
+  dataset2 <- dataset1
+  
+  dataset2 <- dataset2 %>% 
+            melt(id = c("subject_id", "activity")) %>%
+            dcast(subject_id + activity ~ variable, mean)
+  
+  ## Add average prefix to column names
+  names(dataset2) <- gsub("^t", "average-t", names(dataset2))
+  names(dataset2) <- gsub("^f", "average-f", names(dataset2))  
+  
+
+  write.table(dataset2, file = output2, row.name =FALSE)
+  
+  print(head(dataset2[, 1:4], 20))
+  
+  return(dataset2)
   
 }
