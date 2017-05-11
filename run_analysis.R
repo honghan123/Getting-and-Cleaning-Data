@@ -32,7 +32,10 @@ run_analysis <- function()
   if(!require("downloader")) install.packages("downloader")
   library(downloader)
   
-  ## reshape2 will load dplyr
+  if(!require("dplyr")) install.packages("dplyr")
+  library(dplyr)
+  
+  ## reshape2 
   if(!require("reshape2")) install.packages("reshape2")
   library(reshape2)
   
